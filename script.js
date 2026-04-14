@@ -1,21 +1,20 @@
 // DOM Elements
 const textInput = document.getElementById('textInput');
 const colorPicker = document.getElementById('colorPicker');
-const sizeSelector = document.getElementById('sizeSelector');
 const canvas = document.getElementById('textCanvas');
 const downloadBtn = document.getElementById('downloadBtn');
+const errorMessage = document.getElementById('errorMessage');
+const previewSection = document.getElementById('previewSection');
 const ctx = canvas.getContext('2d');
 
-// Size presets
-const sizes = {
-    small: { width: 600, height: 300, fontSize: 80 },
-    medium: { width: 800, height: 400, fontSize: 100 },
-    large: { width: 1000, height: 500, fontSize: 120 }
-};
+// Fixed canvas size
+const canvasWidth = 800;
+const canvasHeight = 400;
+const baseFontSize = 100;
 
-// Initialize canvas with default size
-let currentSize = 'medium';
-setCanvasSize(currentSize);
+// Initialize canvas
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
 
 // Wait for font to load before rendering
 document.fonts.ready.then(() => {
@@ -23,22 +22,34 @@ document.fonts.ready.then(() => {
 });
 
 // Event Listeners
-textInput.addEventListener('input', renderText);
+textInput.addEventListener('input', handleInput);
 colorPicker.addEventListener('input', renderText);
-sizeSelector.addEventListener('change', (e) => {
-    currentSize = e.target.value;
-    setCanvasSize(currentSize);
-    renderText();
-});
 downloadBtn.addEventListener('click', downloadImage);
 
 /**
- * Set canvas dimensions based on selected size
+ * Handle input with validation
  */
-function setCanvasSize(size) {
-    const dimensions = sizes[size];
-    canvas.width = dimensions.width;
-    canvas.height = dimensions.height;
+function handleInput(e) {
+    const value = e.target.value;
+    
+    // Check if input contains only letters and spaces
+    const lettersOnly = /^[a-zA-Z\s]*$/;
+    
+    if (value && !lettersOnly.test(value)) {
+        // Show error message
+        errorMessage.classList.add('show');
+        // Remove invalid characters
+        e.target.value = value.replace(/[^a-zA-Z\s]/g, '');
+        
+        // Hide error after 3 seconds
+        setTimeout(() => {
+            errorMessage.classList.remove('show');
+        }, 3000);
+    } else {
+        errorMessage.classList.remove('show');
+    }
+    
+    renderText();
 }
 
 /**
@@ -47,38 +58,30 @@ function setCanvasSize(size) {
 function renderText() {
     const text = textInput.value.trim();
     const color = colorPicker.value;
-    const dimensions = sizes[currentSize];
     
-    // Clear canvas
+    // Clear canvas with transparent background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Fill background with white
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // If no text, show placeholder
+    // If no text, hide preview and download button
     if (!text) {
-        ctx.fillStyle = '#cccccc';
-        ctx.font = `${dimensions.fontSize * 0.4}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Enter text to preview', canvas.width / 2, canvas.height / 2);
-        downloadBtn.disabled = true;
+        previewSection.classList.remove('show');
+        downloadBtn.classList.remove('show');
         return;
     }
     
-    // Enable download button
-    downloadBtn.disabled = false;
+    // Show preview section and download button
+    previewSection.classList.add('show');
+    downloadBtn.classList.add('show');
     
     // Set text properties
     ctx.fillStyle = color;
-    ctx.font = `${dimensions.fontSize}px 'IBM Logo', Arial, sans-serif`;
+    ctx.font = `${baseFontSize}px 'IBM Logo', Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     // Calculate optimal font size to fit text
     const maxWidth = canvas.width * 0.9; // 90% of canvas width
-    let fontSize = dimensions.fontSize;
+    let fontSize = baseFontSize;
     ctx.font = `${fontSize}px 'IBM Logo', Arial, sans-serif`;
     
     // Reduce font size if text is too wide
@@ -87,7 +90,7 @@ function renderText() {
         ctx.font = `${fontSize}px 'IBM Logo', Arial, sans-serif`;
     }
     
-    // Draw text centered
+    // Draw text centered (transparent background)
     ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 }
 
