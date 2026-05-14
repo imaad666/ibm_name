@@ -1,3 +1,9 @@
+// Import Vercel Analytics
+import { inject } from '@vercel/analytics';
+
+// Initialize analytics
+inject();
+
 // DOM Elements
 const textInput = document.getElementById('textInput');
 const colorPicker = document.getElementById('colorPicker');
