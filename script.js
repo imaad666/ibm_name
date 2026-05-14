@@ -1,8 +1,10 @@
 // Import Vercel Analytics
 import { inject } from '@vercel/analytics';
 
-// Initialize analytics
-inject();
+// Initialize analytics with configuration
+inject({
+    mode: 'production'
+});
 
 // DOM Elements
 const textInput = document.getElementById('textInput');
